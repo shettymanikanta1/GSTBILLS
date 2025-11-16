@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin Panel - GST Billing</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+<div class="sidebar-overlay" onclick="closeMobileMenu()"></div>
+
+<div class="sidebar">
+    <h2>GST Billing</h2>
+    <a class="nav-link" href="login.html">🔐 Login</a>
+    <a class="nav-link active" href="admin.html">👤 Admin Panel</a>
+</div>
+
+<div class="main">
+    <h1>Admin Panel</h1>
+    <p style="opacity:0.7;margin-bottom:30px;">Manage hotel users and access credentials</p>
+
+    <div class="card">
+        <h2>Create New Hotel User</h2>
+        <input class="input" id="newUsername" placeholder="Username *" required>
+        <input class="input" id="newPassword" type="password" placeholder="Password *" required>
+        <input class="input" id="newHotelName" placeholder="Hotel Name (Optional)">
+        <button class="btn btn-primary" onclick="createUser()">Create User</button>
+        <p id="createUserMessage" style="margin-top:10px;display:none;"></p>
+    </div>
+
+    <div class="card">
+        <h2>All Hotel Users</h2>
+        <p style="opacity:0.7;font-size:13px;margin-bottom:15px;">Manage hotel users and their hotel settings</p>
+        <div id="usersList">
+            <p style="opacity:0.6;">Loading users...</p>
+        </div>
+    </div>
+
+    <!-- Manage Hotel Settings Modal -->
+    <div class="modal-bg" id="manageHotelModal" style="display:none;">
+        <div class="modal-box" style="max-width:600px;max-height:90vh;overflow-y:auto;">
+            <h3>Manage Hotel Settings</h3>
+            <p style="opacity:0.7;font-size:13px;margin-bottom:15px;" id="manageHotelUserInfo">For: User</p>
+            
+            <input class="input" id="adminHotelName" placeholder="Hotel Name">
+            <input class="input" id="adminHotelAddress" placeholder="Hotel Address">
+            <input class="input" id="adminHotelGST" placeholder="GST Number">
+            <input class="input" id="adminHotelPhone" placeholder="Phone Number">
+            <input class="input" id="adminHotelEmail" type="email" placeholder="Email ID">
+            <input class="input" id="adminHotelWebsite" type="url" placeholder="Website URL">
+            
+            <div style="display:flex;gap:10px;margin-top:15px;">
+                <button class="btn btn-primary" onclick="saveHotelSettingsForUser()">Save Hotel Settings</button>
+                <button class="btn btn-danger" onclick="closeManageHotelModal()">Close</button>
+            </div>
+            <p id="manageHotelMessage" style="margin-top:10px;display:none;"></p>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal-bg" id="editUserModal" style="display:none;">
+        <div class="modal-box" style="max-width:500px;">
+            <h3>Edit User</h3>
+            <input class="input" id="editUsername" placeholder="Username *" required>
+            <div style="position:relative;margin-top:12px;">
+                <input class="input" id="editPassword" type="password" placeholder="Password *" required style="padding-right:50px;">
+                <button type="button" onclick="togglePasswordVisibility('editPassword', 'togglePasswordBtn')" id="togglePasswordBtn" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#E100FF;cursor:pointer;font-size:14px;padding:5px 10px;">👁️ Show</button>
+            </div>
+            <input class="input" id="editHotelName" placeholder="Hotel Name (Optional)" style="margin-top:12px;">
+            <div style="display:flex;gap:10px;margin-top:15px;">
+                <button class="btn btn-primary" onclick="saveUserEdit()">Save Changes</button>
+                <button class="btn btn-danger" onclick="closeEditModal()">Cancel</button>
+            </div>
+            <p id="editUserMessage" style="margin-top:10px;display:none;"></p>
+        </div>
+    </div>
+
+    <div class="footer">Built by Manshi</div>
+</div>
+
+<script src="app.js"></script>
+<script>
+function loadUsersList() {
+    const users = getAllUsers().filter(u => !u.isAdmin);
+    const container = document.getElementById("usersList");
+
+    if (users.length === 0) {
+        container.innerHTML = "<p style='opacity:0.6;'>No hotel users created yet.</p>";
+        return;
+    }
+
+    container.innerHTML = users.map(user => `
+        <div style="padding:15px;background:rgba(255,255,255,0.05);border-radius:8px;margin:10px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+            <div style="flex:1;min-width:200px;">
+                <strong style="font-size:16px;">${user.username}</strong>
+                <div style="display:flex;align-items:center;gap:8px;margin:5px 0;">
+                    <span style="font-size:13px;opacity:0.7;">Password:</span>
+                    <span id="password-display-${user.id}" style="font-size:13px;font-family:monospace;background:rgba(255,255,255,0.1);padding:2px 8px;border-radius:4px;min-width:100px;">••••••••</span>
+                    <button type="button" onclick="toggleListPasswordVisibility('${user.id}', '${user.password}')" style="background:none;border:none;color:#E100FF;cursor:pointer;font-size:12px;padding:2px 5px;">👁️ Show</button>
+                </div>
+                ${user.hotelName ? `<p style="margin:5px 0;opacity:0.8;">Hotel: ${user.hotelName}</p>` : ''}
+                ${(() => {
+                    const hotel = JSON.parse(localStorage.getItem(`hotel_${user.id}`) || "{}");
+                    return hotel.name ? `<p style="margin:5px 0;opacity:0.7;font-size:12px;color:#64C8FF;">✓ Hotel settings configured</p>` : `<p style="margin:5px 0;opacity:0.5;font-size:12px;">⚠ Hotel settings not configured</p>`;
+                })()}
+                <p style="margin:5px 0;font-size:12px;opacity:0.6;">Created: ${new Date(user.createdAt).toLocaleDateString()}</p>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <button class="btn btn-primary" onclick="editUser('${user.id}')" style="padding:8px 16px;">Edit User</button>
+                <button class="btn" onclick="manageHotelSettings('${user.id}', '${user.username}')" style="padding:8px 16px;background:linear-gradient(45deg, #7F00FF, #E100FF);color:#fff;">🏨 Hotel Settings</button>
+                <button class="btn btn-danger" onclick="deleteUser('${user.id}')" style="padding:8px 16px;">Delete</button>
+            </div>
+        </div>
+    `).join("");
+}
+
+function createUser() {
+    const username = document.getElementById("newUsername").value.trim();
+    const password = document.getElementById("newPassword").value.trim();
+    const hotelName = document.getElementById("newHotelName").value.trim();
+    const messageEl = document.getElementById("createUserMessage");
+
+    if (!username || !password) {
+        messageEl.textContent = "Please enter username and password";
+        messageEl.style.color = "#ff4b4b";
+        messageEl.style.display = "block";
+        return;
+    }
+
+    const users = getAllUsers();
+    
+    // Check if username already exists
+    if (users.find(u => u.username === username)) {
+        messageEl.textContent = "Username already exists";
+        messageEl.style.color = "#ff4b4b";
+        messageEl.style.display = "block";
+        return;
+    }
+
+    // Create new user
+    const newUser = {
+        id: Date.now().toString(),
+        username: username,
+        password: password,
+        hotelName: hotelName,
+        isAdmin: false,
+        createdAt: new Date().toISOString()
+    };
+
+    users.push(newUser);
+    saveAllUsers(users);
+
+    messageEl.textContent = `User "${username}" created successfully!`;
+    messageEl.style.color = "#4caf50";
+    messageEl.style.display = "block";
+
+    // Clear form
+    document.getElementById("newUsername").value = "";
+    document.getElementById("newPassword").value = "";
+    document.getElementById("newHotelName").value = "";
+
+    // Reload users list
+    loadUsersList();
+
+    setTimeout(() => {
+        messageEl.style.display = "none";
+    }, 3000);
+}
+
+let editingUserId = null;
+
+function togglePasswordVisibility(inputId, buttonId) {
+    const passwordInput = document.getElementById(inputId);
+    const toggleBtn = document.getElementById(buttonId);
+    
+    if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+        toggleBtn.textContent = "🙈 Hide";
+    } else {
+        passwordInput.type = "password";
+        toggleBtn.textContent = "👁️ Show";
+    }
+}
+
+let passwordVisibilityState = {}; // Track password visibility per user
+
+function toggleListPasswordVisibility(userId, password) {
+    const displayEl = document.getElementById(`password-display-${userId}`);
+    if (!displayEl) return;
+
+    // Toggle visibility state for this user
+    if (!passwordVisibilityState[userId]) {
+        passwordVisibilityState[userId] = false;
+    }
+
+    passwordVisibilityState[userId] = !passwordVisibilityState[userId];
+
+    if (passwordVisibilityState[userId]) {
+        // Show password
+        displayEl.textContent = password;
+        displayEl.style.color = "#E100FF";
+        // Update button text
+        const buttons = document.querySelectorAll(`button[onclick*="${userId}"]`);
+        buttons.forEach(btn => {
+            if (btn.textContent.includes("Show") || btn.textContent.includes("Hide")) {
+                btn.textContent = "🙈 Hide";
+            }
+        });
+    } else {
+        // Hide password
+        displayEl.textContent = "••••••••";
+        displayEl.style.color = "";
+        // Update button text
+        const buttons = document.querySelectorAll(`button[onclick*="${userId}"]`);
+        buttons.forEach(btn => {
+            if (btn.textContent.includes("Show") || btn.textContent.includes("Hide")) {
+                btn.textContent = "👁️ Show";
+            }
+        });
+    }
+}
+
+function editUser(userId) {
+    const users = getAllUsers();
+    const user = users.find(u => u.id === userId);
+    
+    if (!user) {
+        alert("User not found");
+        return;
+    }
+
+    editingUserId = userId;
+    
+    // Populate edit form
+    document.getElementById("editUsername").value = user.username;
+    document.getElementById("editPassword").value = user.password;
+    document.getElementById("editHotelName").value = user.hotelName || "";
+    
+    // Reset password visibility to hidden
+    const passwordInput = document.getElementById("editPassword");
+    const toggleBtn = document.getElementById("togglePasswordBtn");
+    passwordInput.type = "password";
+    toggleBtn.textContent = "👁️ Show";
+    
+    // Show modal
+    document.getElementById("editUserModal").style.display = "flex";
+    document.getElementById("editUserMessage").style.display = "none";
+}
+
+function closeEditModal() {
+    document.getElementById("editUserModal").style.display = "none";
+    editingUserId = null;
+    document.getElementById("editUserMessage").style.display = "none";
+    
+    // Clear form
+    document.getElementById("editUsername").value = "";
+    document.getElementById("editPassword").value = "";
+    document.getElementById("editHotelName").value = "";
+}
+
+function saveUserEdit() {
+    if (!editingUserId) {
+        alert("No user selected for editing");
+        return;
+    }
+
+    const username = document.getElementById("editUsername").value.trim();
+    const password = document.getElementById("editPassword").value.trim();
+    const hotelName = document.getElementById("editHotelName").value.trim();
+    const messageEl = document.getElementById("editUserMessage");
+
+    if (!username || !password) {
+        messageEl.textContent = "Please enter username and password";
+        messageEl.style.color = "#ff4b4b";
+        messageEl.style.display = "block";
+        return;
+    }
+
+    const users = getAllUsers();
+    const userIndex = users.findIndex(u => u.id === editingUserId);
+    
+    if (userIndex === -1) {
+        messageEl.textContent = "User not found";
+        messageEl.style.color = "#ff4b4b";
+        messageEl.style.display = "block";
+        return;
+    }
+
+    // Check if username already exists (but not for the current user being edited)
+    const usernameExists = users.find(u => u.username === username && u.id !== editingUserId);
+    if (usernameExists) {
+        messageEl.textContent = "Username already exists";
+        messageEl.style.color = "#ff4b4b";
+        messageEl.style.display = "block";
+        return;
+    }
+
+    // Update user
+    users[userIndex].username = username;
+    users[userIndex].password = password;
+    users[userIndex].hotelName = hotelName;
+    users[userIndex].updatedAt = new Date().toISOString();
+
+    saveAllUsers(users);
+
+    messageEl.textContent = `User "${username}" updated successfully!`;
+    messageEl.style.color = "#4caf50";
+    messageEl.style.display = "block";
+
+    // Reload users list
+    loadUsersList();
+
+    setTimeout(() => {
+        closeEditModal();
+    }, 1500);
+}
+
+function deleteUser(userId) {
+    if (!confirm("Are you sure you want to delete this user? All their data will be lost!")) {
+        return;
+    }
+
+    const users = getAllUsers();
+    const filteredUsers = users.filter(u => u.id !== userId);
+    saveAllUsers(filteredUsers);
+
+    // Delete user's data
+    deleteUserData(userId);
+
+    loadUsersList();
+    alert("User deleted successfully!");
+}
+
+// ---------- HOTEL SETTINGS MANAGEMENT (ADMIN ONLY) ----------
+let managingHotelUserId = null;
+
+function manageHotelSettings(userId, username) {
+    managingHotelUserId = userId;
+    document.getElementById("manageHotelUserInfo").textContent = `For: ${username}`;
+    
+    // Load hotel details for this user
+    const hotel = JSON.parse(localStorage.getItem(`hotel_${userId}`) || "{}");
+    
+    // Populate form
+    document.getElementById("adminHotelName").value = hotel.name || "";
+    document.getElementById("adminHotelAddress").value = hotel.address || "";
+    document.getElementById("adminHotelGST").value = hotel.gst || "";
+    document.getElementById("adminHotelPhone").value = hotel.phone || "";
+    document.getElementById("adminHotelEmail").value = hotel.email || "";
+    document.getElementById("adminHotelWebsite").value = hotel.website || "";
+    
+    // Show modal
+    document.getElementById("manageHotelModal").style.display = "flex";
+    document.getElementById("manageHotelMessage").style.display = "none";
+}
+
+function closeManageHotelModal() {
+    document.getElementById("manageHotelModal").style.display = "none";
+    managingHotelUserId = null;
+    document.getElementById("manageHotelMessage").style.display = "none";
+    
+    // Clear form
+    document.getElementById("adminHotelName").value = "";
+    document.getElementById("adminHotelAddress").value = "";
+    document.getElementById("adminHotelGST").value = "";
+    document.getElementById("adminHotelPhone").value = "";
+    document.getElementById("adminHotelEmail").value = "";
+    document.getElementById("adminHotelWebsite").value = "";
+}
+
+function saveHotelSettingsForUser() {
+    if (!managingHotelUserId) {
+        alert("No user selected");
+        return;
+    }
+
+    const data = {
+        name: document.getElementById("adminHotelName").value.trim(),
+        address: document.getElementById("adminHotelAddress").value.trim(),
+        gst: document.getElementById("adminHotelGST").value.trim(),
+        phone: document.getElementById("adminHotelPhone").value.trim(),
+        email: document.getElementById("adminHotelEmail").value.trim(),
+        website: document.getElementById("adminHotelWebsite").value.trim()
+    };
+
+    // Save hotel data with user ID prefix
+    localStorage.setItem(`hotel_${managingHotelUserId}`, JSON.stringify(data));
+    
+    const messageEl = document.getElementById("manageHotelMessage");
+    messageEl.textContent = "Hotel settings saved successfully!";
+    messageEl.style.color = "#4caf50";
+    messageEl.style.display = "block";
+
+    // Reload users list to update status
+    loadUsersList();
+
+    setTimeout(() => {
+        messageEl.style.display = "none";
+        closeManageHotelModal();
+    }, 1500);
+}
+
+// Close modal when clicking outside
+window.addEventListener("click", function(event) {
+    const editModal = document.getElementById("editUserModal");
+    const hotelModal = document.getElementById("manageHotelModal");
+    
+    if (event.target === editModal) {
+        closeEditModal();
+    }
+    if (event.target === hotelModal) {
+        closeManageHotelModal();
+    }
+});
+
+// Mobile menu functions
+function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('show');
+}
+
+function closeMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('open');
+    overlay.classList.remove('show');
+}
+
+// Close menu when clicking a nav link on mobile
+document.addEventListener('DOMContentLoaded', function() {
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                closeMobileMenu();
+            }
+        });
+    });
+});
+
+// Load users on page load
+window.addEventListener("DOMContentLoaded", function() {
+    loadUsersList();
+});
+</script>
+</body>
+</html>

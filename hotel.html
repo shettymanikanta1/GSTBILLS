@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hotel Settings</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+<div class="sidebar-overlay" onclick="closeMobileMenu()"></div>
+
+<div class="sidebar">
+    <h2>GST Billing</h2>
+    <div style="padding:15px 30px;margin:10px 0;color:#fff;background:rgba(255,255,255,0.1);border-radius:8px;">
+        <p style="margin:5px 0;font-size:14px;opacity:0.8;">Logged in as:</p>
+        <p style="margin:5px 0;font-weight:bold;" id="currentUsername">User</p>
+    </div>
+    <a class="nav-link" href="index.html">🏠 Dashboard</a>
+    <a class="nav-link" href="invoice.html">🧾 Create Invoice</a>
+    <a class="nav-link" href="invoices-list.html">📋 All Invoices</a>
+    <a class="nav-link active" href="hotel.html">🏨 Hotel Settings</a>
+    <a class="nav-link" href="admin.html" id="adminLink" style="display:none;">👤 Admin Panel</a>
+    <a class="nav-link" href="#" onclick="logout(); return false;" style="color:#ff4b4b;margin-top:20px;">🚪 Logout</a>
+</div>
+
+<div class="main">
+
+    <div class="card">
+        <h2>Hotel Settings</h2>
+        <p style="opacity:0.7;margin-bottom:15px;">Configure your hotel details</p>
+        <button class="btn btn-primary" onclick="checkPassword()">Edit Hotel Details</button>
+    </div>
+
+    <div class="modal-bg" id="settingsModal">
+        <div class="modal-box">
+            <h3>Edit Hotel Details</h3>
+
+            <input class="input" id="hotelName" placeholder="Hotel Name">
+            <input class="input" id="hotelAddress" placeholder="Hotel Address">
+            <input class="input" id="hotelGST" placeholder="GST Number">
+            <input class="input" id="hotelPhone" placeholder="Phone Number">
+            <input class="input" id="hotelEmail" type="email" placeholder="Email ID">
+            <input class="input" id="hotelWebsite" type="url" placeholder="Website URL">
+
+            <button class="btn btn-primary" onclick="saveHotel()">Save Details</button>
+            <button class="btn btn-danger" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <div class="footer">Built by Manshi</div>
+</div>
+
+<script src="app.js"></script>
+<script>
+// Mobile menu functions
+function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('show');
+}
+
+function closeMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('open');
+    overlay.classList.remove('show');
+}
+
+// Close menu when clicking a nav link on mobile
+document.addEventListener('DOMContentLoaded', function() {
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                closeMobileMenu();
+            }
+        });
+    });
+});
+
+window.addEventListener("DOMContentLoaded", function() {
+    const username = sessionStorage.getItem("currentUsername");
+    if (username) {
+        document.getElementById("currentUsername").textContent = username;
+    }
+    if (isAdmin()) {
+        document.getElementById("adminLink").style.display = "block";
+    }
+});
+</script>
+
+</body>
+</html>

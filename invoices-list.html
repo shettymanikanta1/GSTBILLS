@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>All Invoices</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+<div class="sidebar-overlay" onclick="closeMobileMenu()"></div>
+
+<div class="sidebar">
+    <h2>GST Billing</h2>
+    <div style="padding:15px 30px;margin:10px 0;color:#fff;background:rgba(255,255,255,0.1);border-radius:8px;">
+        <p style="margin:5px 0;font-size:14px;opacity:0.8;">Logged in as:</p>
+        <p style="margin:5px 0;font-weight:bold;" id="currentUsername">User</p>
+    </div>
+    <a class="nav-link" href="index.html">🏠 Dashboard</a>
+    <a class="nav-link" href="invoice.html">🧾 Create Invoice</a>
+    <a class="nav-link active" href="invoices-list.html">📋 All Invoices</a>
+    <a class="nav-link" href="hotel.html">🏨 Hotel Settings</a>
+    <a class="nav-link" href="admin.html" id="adminLink" style="display:none;">👤 Admin Panel</a>
+    <a class="nav-link" href="#" onclick="logout(); return false;" style="color:#ff4b4b;margin-top:20px;">🚪 Logout</a>
+</div>
+
+<div class="main">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h1>All Invoices</h1>
+        <button class="btn btn-primary" onclick="window.location='invoice.html'">+ Create New Invoice</button>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+        <input class="input" id="searchInput" placeholder="🔍 Search by invoice number, customer name, or date..." onkeyup="filterInvoices()" style="margin-top:0;">
+    </div>
+
+    <div class="card">
+        <div style="display:flex;justify-content:space-between;margin-bottom:15px;">
+            <h2 style="margin:0;">Invoice List</h2>
+            <p style="margin:0;opacity:0.7;">Total: <strong id="totalCount">0</strong> invoices</p>
+        </div>
+        <div id="invoicesList">
+            <p style="opacity:0.6;text-align:center;padding:20px;">Loading invoices...</p>
+        </div>
+    </div>
+
+    <div class="footer">Built by Manshi</div>
+</div>
+
+<script src="app.js"></script>
+<script>
+function loadAllInvoices() {
+    const invoices = getAllInvoices();
+    const searchTerm = document.getElementById("searchInput")?.value?.toLowerCase() || "";
+    
+    // Filter invoices if search term exists
+    let filteredInvoices = invoices;
+    if (searchTerm) {
+        filteredInvoices = invoices.filter(inv => 
+            inv.invoiceNumber.toLowerCase().includes(searchTerm) ||
+            inv.customerName.toLowerCase().includes(searchTerm) ||
+            inv.date.includes(searchTerm) ||
+            (inv.customerPhone && inv.customerPhone.includes(searchTerm))
+        );
+    }
+
+    // Sort by date (newest first)
+    filteredInvoices.sort((a, b) => {
+        const dateA = new Date(a.createdAt || a.date);
+        const dateB = new Date(b.createdAt || b.date);
+        return dateB - dateA;
+    });
+
+    const listContainer = document.getElementById("invoicesList");
+    const totalCount = document.getElementById("totalCount");
+
+    if (totalCount) {
+        totalCount.textContent = filteredInvoices.length;
+    }
+
+    if (filteredInvoices.length === 0) {
+        listContainer.innerHTML = `
+            <div style="text-align:center;padding:40px;opacity:0.6;">
+                <p style="font-size:18px;margin-bottom:10px;">${searchTerm ? 'No invoices found matching your search.' : 'No invoices yet.'}</p>
+                ${!searchTerm ? '<button class="btn btn-primary" onclick="window.location=\'invoice.html\'">Create Your First Invoice</button>' : ''}
+            </div>
+        `;
+        return;
+    }
+
+    listContainer.innerHTML = filteredInvoices.map(inv => {
+        return `
+            <div style="padding:15px;background:rgba(255,255,255,0.05);border-radius:8px;margin:10px 0;border-left:4px solid #E100FF;">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                    <div style="flex:1;min-width:250px;">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                            <strong style="font-size:16px;color:#E100FF;">${inv.invoiceNumber}</strong>
+                            <span style="font-size:12px;opacity:0.7;background:rgba(255,255,255,0.1);padding:2px 8px;border-radius:4px;">${inv.date}</span>
+                        </div>
+                        <p style="margin:5px 0;font-size:15px;"><strong>${inv.customerName}</strong></p>
+                        ${inv.customerPhone ? `<p style="margin:5px 0;font-size:13px;opacity:0.8;">Phone: ${inv.customerPhone}</p>` : ''}
+                        ${inv.customerRoom ? `<p style="margin:5px 0;font-size:13px;opacity:0.8;">Room: ${inv.customerRoom}</p>` : ''}
+                    </div>
+                    <div style="text-align:right;min-width:150px;">
+                        <p style="margin:5px 0;font-size:18px;font-weight:bold;color:#E100FF;">₹${(inv.grandTotal || 0).toFixed(2)}</p>
+                        <a href="invoice-details.html?id=${inv.id}" class="btn btn-primary" style="margin-top:10px;display:inline-block;text-decoration:none;padding:8px 16px;">View Invoice</a>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+
+function filterInvoices() {
+    loadAllInvoices();
+}
+
+// Mobile menu functions
+function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('show');
+}
+
+function closeMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('open');
+    overlay.classList.remove('show');
+}
+
+// Close menu when clicking a nav link on mobile
+document.addEventListener('DOMContentLoaded', function() {
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                closeMobileMenu();
+            }
+        });
+    });
+});
+
+// Load invoices on page load
+window.addEventListener("DOMContentLoaded", function() {
+    loadAllInvoices();
+    const username = sessionStorage.getItem("currentUsername");
+    if (username) {
+        const el = document.getElementById("currentUsername");
+        if (el) el.textContent = username;
+    }
+    if (isAdmin()) {
+        const el = document.getElementById("adminLink");
+        if (el) el.style.display = "block";
+    }
+});
+</script>
+
+</body>
+</html>

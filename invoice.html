@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Create Invoice</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+<div class="sidebar-overlay" onclick="closeMobileMenu()"></div>
+
+<div class="sidebar">
+    <h2>GST Billing</h2>
+    <div style="padding:15px 30px;margin:10px 0;color:#fff;background:rgba(255,255,255,0.1);border-radius:8px;">
+        <p style="margin:5px 0;font-size:14px;opacity:0.8;">Logged in as:</p>
+        <p style="margin:5px 0;font-weight:bold;" id="currentUsername">User</p>
+    </div>
+    <a class="nav-link" href="index.html">🏠 Dashboard</a>
+    <a class="nav-link active" href="invoice.html">🧾 Create Invoice</a>
+    <a class="nav-link" href="invoices-list.html">📋 All Invoices</a>
+    <a class="nav-link" href="hotel.html">🏨 Hotel Settings</a>
+    <a class="nav-link" href="admin.html" id="adminLink" style="display:none;">👤 Admin Panel</a>
+    <a class="nav-link" href="#" onclick="logout(); return false;" style="color:#ff4b4b;margin-top:20px;">🚪 Logout</a>
+</div>
+
+<div class="main">
+    <h1>Create Invoice</h1>
+
+    <div class="card">
+        <h3>Customer Details</h3>
+        <input class="input" id="customerName" placeholder="Customer Name *" required>
+        <input class="input" id="customerPhone" placeholder="Customer Phone">
+        <input class="input" id="customerRoom" placeholder="Room Number">
+        <input class="input" id="customerAddress" placeholder="Customer Address">
+        <input class="input" id="customerGST" placeholder="Customer GST Number (Optional)">
+        <div style="margin-top:12px;">
+            <label style="display:block;margin-bottom:5px;opacity:0.8;font-size:14px;">Check-In Date:</label>
+            <input class="input" id="checkInDate" type="date" placeholder="Check-In Date" onchange="updateDateDisplay('checkInDate', 'checkInDisplay'); calculateDays();">
+            <p id="checkInDisplay" style="margin:5px 0 10px 0;padding:10px 12px;background:linear-gradient(135deg, rgba(0,150,255,0.15), rgba(100,200,255,0.1));border:1px solid rgba(0,150,255,0.3);border-radius:8px;font-size:14px;color:#64C8FF;min-height:20px;font-weight:500;box-shadow:0 2px 8px rgba(0,150,255,0.1);">
+                <span style="opacity:0.6;color:#aaa;">No date selected</span>
+            </p>
+        </div>
+        <div style="margin-top:12px;">
+            <label style="display:block;margin-bottom:5px;opacity:0.8;font-size:14px;">Check-Out Date:</label>
+            <input class="input" id="checkOutDate" type="date" placeholder="Check-Out Date" onchange="updateDateDisplay('checkOutDate', 'checkOutDisplay'); calculateDays();">
+            <p id="checkOutDisplay" style="margin:5px 0 10px 0;padding:10px 12px;background:linear-gradient(135deg, rgba(255,100,150,0.15), rgba(255,150,200,0.1));border:1px solid rgba(255,100,150,0.3);border-radius:8px;font-size:14px;color:#FF96C8;min-height:20px;font-weight:500;box-shadow:0 2px 8px rgba(255,100,150,0.1);">
+                <span style="opacity:0.6;color:#aaa;">No date selected</span>
+            </p>
+        </div>
+        <div style="margin-top:12px;">
+            <label style="display:block;margin-bottom:5px;opacity:0.8;font-size:14px;">Invoice Date:</label>
+            <input class="input" id="invoiceDate" type="date" placeholder="Invoice Date" onchange="updateDateDisplay('invoiceDate', 'invoiceDateDisplay');">
+            <p id="invoiceDateDisplay" style="margin:5px 0 10px 0;padding:10px 12px;background:linear-gradient(135deg, rgba(150,255,100,0.15), rgba(200,255,150,0.1));border:1px solid rgba(150,255,100,0.3);border-radius:8px;font-size:14px;color:#96FF96;min-height:20px;font-weight:500;box-shadow:0 2px 8px rgba(150,255,100,0.1);">
+                <span style="opacity:0.6;color:#aaa;">No date selected</span>
+            </p>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Add Items</h3>
+        <input class="input" id="itemName" placeholder="Description *">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px;">
+            <input class="input" id="itemQty" type="number" placeholder="No. of Days" value="1" min="0.01" step="0.01">
+            <input class="input" id="itemPrice" type="number" placeholder="Rate per day *" min="0" step="0.01">
+            <input class="input" id="itemGST" type="number" placeholder="GST %" value="18" min="0" max="100" step="0.01">
+        </div>
+        <button class="btn btn-primary" onclick="addItem()">Add Item</button>
+        <button class="btn btn-danger" onclick="clearInvoice()">Clear All Items</button>
+
+        <table class="table" style="margin-top:20px;">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>No. of Days</th>
+                    <th>Rate per day</th>
+                    <th>GST %</th>
+                    <th>Total</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="invoiceTable"></tbody>
+        </table>
+
+        <div id="invoiceTotals"></div>
+
+        <button class="btn btn-primary" style="width:100%;margin-top:20px;padding:15px;font-size:18px;" onclick="saveInvoice()">
+            💾 Save Invoice
+        </button>
+    </div>
+
+    <div class="footer">Built by Manshi</div>
+</div>
+
+<script src="app.js"></script>
+<script>
+// Function to format and display selected date
+function updateDateDisplay(inputId, displayId) {
+    const dateInput = document.getElementById(inputId);
+    const displayEl = document.getElementById(displayId);
+    
+    if (dateInput && displayEl) {
+        const selectedDate = dateInput.value;
+        
+        if (selectedDate) {
+            // Format date: Convert YYYY-MM-DD to readable format
+            const date = new Date(selectedDate + 'T00:00:00');
+            const options = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                weekday: 'short'
+            };
+            const formattedDate = date.toLocaleDateString('en-US', options);
+            
+            // Get label name
+            let labelName = '';
+            if (inputId === 'checkInDate') labelName = 'Check-In Date: ';
+            else if (inputId === 'checkOutDate') labelName = 'Check-Out Date: ';
+            else if (inputId === 'invoiceDate') labelName = 'Invoice Date: ';
+            
+            // Different colors for each date type
+            let textColor = '';
+            if (inputId === 'checkInDate') {
+                textColor = '#64C8FF'; // Sky blue
+            } else if (inputId === 'checkOutDate') {
+                textColor = '#FF96C8'; // Pink
+            } else if (inputId === 'invoiceDate') {
+                textColor = '#96FF96'; // Light green
+            }
+            
+            displayEl.innerHTML = `<strong style="color:${textColor};">${labelName}</strong><span style="color:${textColor};">${formattedDate}</span> <span style="opacity:0.7;font-size:12px;">(${selectedDate})</span>`;
+            displayEl.style.opacity = '1';
+        } else {
+            displayEl.innerHTML = '<span style="opacity:0.6;">No date selected</span>';
+            displayEl.style.opacity = '0.7';
+        }
+    }
+}
+
+// Initialize date displays on page load
+window.addEventListener("DOMContentLoaded", function() {
+    const username = sessionStorage.getItem("currentUsername");
+    if (username) {
+        document.getElementById("currentUsername").textContent = username;
+    }
+    if (isAdmin()) {
+        document.getElementById("adminLink").style.display = "block";
+    }
+    
+    // Update date displays if dates are already set
+    const checkInDate = document.getElementById("checkInDate");
+    const checkOutDate = document.getElementById("checkOutDate");
+    const invoiceDate = document.getElementById("invoiceDate");
+    
+    if (checkInDate && checkInDate.value) {
+        updateDateDisplay('checkInDate', 'checkInDisplay');
+    }
+    if (checkOutDate && checkOutDate.value) {
+        updateDateDisplay('checkOutDate', 'checkOutDisplay');
+    }
+    if (invoiceDate && invoiceDate.value) {
+        updateDateDisplay('invoiceDate', 'invoiceDateDisplay');
+    } else {
+        // Set today's date as default for invoice date
+        const today = new Date().toISOString().split('T')[0];
+        invoiceDate.value = today;
+        updateDateDisplay('invoiceDate', 'invoiceDateDisplay');
+    }
+    
+    // Add event listeners for real-time updates
+    if (checkInDate) {
+        checkInDate.addEventListener('change', function() {
+            updateDateDisplay('checkInDate', 'checkInDisplay');
+        });
+    }
+    if (checkOutDate) {
+        checkOutDate.addEventListener('change', function() {
+            updateDateDisplay('checkOutDate', 'checkOutDisplay');
+        });
+    }
+    if (invoiceDate) {
+        invoiceDate.addEventListener('change', function() {
+            updateDateDisplay('invoiceDate', 'invoiceDateDisplay');
+        });
+    }
+});
+
+// Mobile menu functions
+function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('show');
+}
+
+function closeMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('open');
+    overlay.classList.remove('show');
+}
+
+// Close menu when clicking a nav link on mobile
+document.addEventListener('DOMContentLoaded', function() {
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                closeMobileMenu();
+            }
+        });
+    });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Invoice Details</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+<button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+<div class="sidebar-overlay" onclick="closeMobileMenu()"></div>
+
+<div class="sidebar">
+    <h2>GST Billing</h2>
+    <div style="padding:15px 30px;margin:10px 0;color:#fff;background:rgba(255,255,255,0.1);border-radius:8px;">
+        <p style="margin:5px 0;font-size:14px;opacity:0.8;">Logged in as:</p>
+        <p style="margin:5px 0;font-weight:bold;" id="currentUsername">User</p>
+    </div>
+    <a class="nav-link" href="index.html">🏠 Dashboard</a>
+    <a class="nav-link" href="invoice.html">🧾 Create Invoice</a>
+    <a class="nav-link" href="invoices-list.html">📋 All Invoices</a>
+    <a class="nav-link" href="hotel.html">🏨 Hotel Settings</a>
+    <a class="nav-link" href="admin.html" id="adminLink" style="display:none;">👤 Admin Panel</a>
+    <a class="nav-link" href="#" onclick="logout(); return false;" style="color:#ff4b4b;margin-top:20px;">🚪 Logout</a>
+</div>
+
+<div class="main">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h1>Invoice Details</h1>
+        <button class="btn btn-primary" onclick="downloadInvoicePDF()">
+            📥 Download PDF
+        </button>
+    </div>
+
+    <div class="card" id="invoiceDetailsContainer">
+        <p>Loading invoice...</p>
+    </div>
+
+    <div class="footer">Built by Manshi</div>
+</div>
+
+<script src="app.js"></script>
+<script>
+// Mobile menu functions
+function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('show');
+}
+
+function closeMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('open');
+    overlay.classList.remove('show');
+}
+
+// Close menu when clicking a nav link on mobile
+document.addEventListener('DOMContentLoaded', function() {
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                closeMobileMenu();
+            }
+        });
+    });
+});
+
+window.addEventListener("DOMContentLoaded", function() {
+    const username = sessionStorage.getItem("currentUsername");
+    if (username) {
+        const el = document.getElementById("currentUsername");
+        if (el) el.textContent = username;
+    }
+    if (isAdmin()) {
+        const el = document.getElementById("adminLink");
+        if (el) el.style.display = "block";
+    }
+});
+</script>
+
+</body>
+</html>

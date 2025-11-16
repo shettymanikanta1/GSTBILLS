@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='UTF-8'>
+  <title>Create Invoice</title>
+  <link rel='stylesheet' href='assets/style.css'>
+</head>
+<body>
+<h1>Create Invoice</h1>
+<div class='card'>
+  <input id='item' placeholder='Item Name'>
+  <input id='qty' type='number' placeholder='Qty'>
+  <input id='price' type='number' placeholder='Price'>
+  <button onclick='addItem()'>Add</button>
+  <table id='items'></table>
+  <h3 id='total'></h3>
+  <button onclick='saveInvoice()'>Save Invoice</button>
+</div>
+<script src='assets/app.js'></script>
+</body>
+</html>

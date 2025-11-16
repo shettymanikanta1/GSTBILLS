@@ -1,0 +1,484 @@
+/* -------------------------------------------------
+   PREMIUM UI VERSION 2 – Neon Gradient + Sidebar
+---------------------------------------------------*/
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+:root {
+    --primary: #7F00FF;
+    --secondary: #E100FF;
+    --glass-bg: rgba(255,255,255,0.13);
+    --text-light: #eaeaea;
+    --card-bg: rgba(255,255,255,0.1);
+}
+
+body {
+    margin: 0;
+    background: linear-gradient(135deg, #1a1a1d, #2d0057);
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-light);
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 260px;
+    background: linear-gradient(180deg, #000, #2a0042);
+    padding-top: 30px;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    height: 100%;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.4);
+}
+
+.sidebar h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #fff;
+}
+
+.nav-link {
+    padding: 15px 30px;
+    margin: 8px 0;
+    color: #ddd;
+    text-decoration: none;
+    display: block;
+    transition: 0.3s;
+    border-left: 4px solid transparent;
+    font-size: 18px;
+}
+
+.nav-link:hover {
+    background: rgba(255,255,255,0.1);
+    border-left: 4px solid var(--secondary);
+    color: #fff;
+}
+
+/* Main Content */
+.main {
+    margin-left: 260px;
+    padding: 25px;
+    width: calc(100% - 260px);
+    animation: fadeIn 0.7s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Cards */
+.card {
+    background: var(--card-bg);
+    padding: 25px;
+    border-radius: 18px;
+    margin: 15px 0;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+}
+
+/* Fancy Inputs */
+.input {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    outline: none;
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    margin-top: 12px;
+}
+
+.input::placeholder {
+    color: #ccc;
+}
+
+/* Neon Buttons */
+.btn {
+    padding: 12px 22px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    color: #fff;
+    margin-top: 15px;
+    font-size: 16px;
+    transition: 0.3s;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, var(--primary), var(--secondary));
+    box-shadow: 0 5px 20px rgba(127,0,255,0.4);
+}
+
+.btn-primary:hover {
+    transform: scale(1.05);
+}
+
+.btn-danger {
+    background: #ff4b4b;
+    box-shadow: 0 5px 18px rgba(255,75,75,0.4);
+}
+
+.btn-danger:hover {
+    transform: scale(1.05);
+}
+
+/* Table */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+.table th, .table td {
+    padding: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+.table tr:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+/* Modal */
+.modal-bg {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    backdrop-filter: blur(6px);
+    background: rgba(0,0,0,0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-box {
+    background: var(--card-bg);
+    padding: 25px;
+    width: 420px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+}
+
+.footer {
+    margin-top: 35px;
+    text-align: center;
+    opacity: 0.7;
+    font-size: 14px;
+}
+
+/* Invoice Preview */
+.invoice-preview {
+    background: white;
+    color: #333;
+    padding: 40px;
+    border-radius: 8px;
+    max-width: 800px;
+    margin: 0 auto;
+    font-family: Arial, sans-serif;
+}
+
+.invoice-preview h1, .invoice-preview h3, .invoice-preview h4 {
+    color: #333;
+    margin: 10px 0;
+}
+
+.invoice-preview p {
+    color: #333;
+    margin: 5px 0;
+}
+
+.invoice-preview a {
+    color: #007bff;
+    text-decoration: underline;
+}
+
+.invoice-preview a:hover {
+    color: #0056b3;
+}
+
+.invoice-preview hr {
+    border: none;
+    border-top: 1px solid #ddd;
+}
+
+.invoice-preview table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+.invoice-preview table th {
+    background: #f0f0f0;
+    padding: 12px;
+    text-align: left;
+    border: 1px solid #ddd;
+    color: #333;
+}
+
+.invoice-preview table td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    color: #333;
+}
+
+.invoice-preview table tfoot td {
+    background: #f9f9f9;
+    font-weight: bold;
+}
+
+/* Active nav link */
+.nav-link.active {
+    background: rgba(255,255,255,0.15);
+    border-left: 4px solid var(--secondary);
+    color: #fff;
+}
+
+/* Login Container */
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #1a1a1d, #2d0057);
+}
+
+/* ============================================
+   MOBILE RESPONSIVE STYLES
+   ============================================ */
+
+/* Hamburger Menu Button */
+.mobile-menu-btn {
+    display: none;
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 1001;
+    background: linear-gradient(45deg, var(--primary), var(--secondary));
+    border: none;
+    color: white;
+    padding: 12px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 20px;
+    box-shadow: 0 4px 15px rgba(127,0,255,0.4);
+}
+
+.mobile-menu-btn:active {
+    transform: scale(0.95);
+}
+
+/* Mobile Overlay */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 999;
+    backdrop-filter: blur(4px);
+}
+
+/* Mobile Styles */
+@media screen and (max-width: 768px) {
+    /* Show hamburger menu */
+    .mobile-menu-btn {
+        display: block;
+    }
+    
+    /* Sidebar - Hidden by default on mobile */
+    .sidebar {
+        position: fixed;
+        left: -260px;
+        top: 0;
+        z-index: 1000;
+        transition: left 0.3s ease;
+        height: 100vh;
+        overflow-y: auto;
+    }
+    
+    /* Sidebar open state */
+    .sidebar.open {
+        left: 0;
+    }
+    
+    /* Show overlay when sidebar is open */
+    .sidebar-overlay.show {
+        display: block;
+    }
+    
+    /* Main content - Full width on mobile */
+    .main {
+        margin-left: 0;
+        width: 100%;
+        padding: 60px 15px 25px 15px;
+    }
+    
+    /* Cards - Better spacing on mobile */
+    .card {
+        padding: 20px 15px;
+        margin: 10px 0;
+        border-radius: 12px;
+    }
+    
+    /* Grid layouts - Stack on mobile */
+    div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+    }
+    
+    /* Flex layouts - Stack on mobile */
+    div[style*="display:flex"] {
+        flex-direction: column !important;
+    }
+    
+    /* Buttons - Larger touch targets */
+    .btn {
+        padding: 14px 20px;
+        font-size: 16px;
+        width: 100%;
+        margin-top: 10px;
+    }
+    
+    /* Inputs - Better mobile experience */
+    .input {
+        padding: 16px;
+        font-size: 16px; /* Prevents zoom on iOS */
+        margin-top: 10px;
+    }
+    
+    /* Tables - Scrollable on mobile */
+    .table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .table thead,
+    .table tbody {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+    }
+    
+    .table tr {
+        display: table-row;
+    }
+    
+    /* Invoice preview - Responsive */
+    .invoice-preview {
+        padding: 20px 15px;
+        max-width: 100%;
+        font-size: 14px;
+    }
+    
+    .invoice-preview table {
+        font-size: 12px;
+    }
+    
+    .invoice-preview table th,
+    .invoice-preview table td {
+        padding: 8px 6px;
+    }
+    
+    /* Modal - Full width on mobile */
+    .modal-box {
+        width: 90%;
+        max-width: 420px;
+        margin: 20px;
+        padding: 20px;
+    }
+    
+    /* Navigation links - Better touch targets */
+    .nav-link {
+        padding: 18px 30px;
+        font-size: 16px;
+    }
+    
+    /* Headings - Slightly smaller on mobile */
+    h1 {
+        font-size: 24px;
+        margin-bottom: 15px;
+    }
+    
+    h2 {
+        font-size: 20px;
+    }
+    
+    h3 {
+        font-size: 18px;
+    }
+    
+    /* Footer */
+    .footer {
+        margin-top: 25px;
+        font-size: 12px;
+    }
+    
+    /* Cloud sync card - Stack on mobile */
+    .card[style*="display:flex"] {
+        flex-direction: column !important;
+        gap: 15px !important;
+    }
+    
+    .card[style*="display:flex"] > div {
+        width: 100% !important;
+    }
+    
+    .card[style*="display:flex"] button {
+        width: 100%;
+    }
+}
+
+/* Small mobile devices */
+@media screen and (max-width: 480px) {
+    .main {
+        padding: 60px 10px 20px 10px;
+    }
+    
+    .card {
+        padding: 15px 12px;
+    }
+    
+    .input {
+        padding: 14px;
+        font-size: 16px;
+    }
+    
+    .btn {
+        padding: 12px 18px;
+    }
+    
+    .invoice-preview {
+        padding: 15px 10px;
+        font-size: 12px;
+    }
+    
+    .invoice-preview table {
+        font-size: 11px;
+    }
+    
+    .invoice-preview table th,
+    .invoice-preview table td {
+        padding: 6px 4px;
+    }
+}
+
+/* Tablet styles */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+    .sidebar {
+        width: 220px;
+    }
+    
+    .main {
+        margin-left: 220px;
+        width: calc(100% - 220px);
+        padding: 25px 20px;
+    }
+    
+    div[style*="grid-template-columns:1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+}

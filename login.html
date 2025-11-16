@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Login - GST Billing</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="login-container">
+    <div class="card" style="max-width:400px;margin:100px auto;">
+        <h1 style="text-align:center;margin-bottom:30px;">🏨 GST Billing System</h1>
+        <h2 style="text-align:center;margin-bottom:20px;">Login</h2>
+        
+        <div id="loginForm">
+            <input class="input" id="username" placeholder="Username" required>
+            <input class="input" id="password" type="password" placeholder="Password" required>
+            <button class="btn btn-primary" style="width:100%;margin-top:15px;" onclick="login()">Login</button>
+            <p id="loginError" style="color:#ff4b4b;text-align:center;margin-top:15px;display:none;"></p>
+        </div>
+
+        <div style="margin-top:30px;text-align:center;">
+            <p style="opacity:0.7;font-size:14px;">Need admin access?</p>
+            <a href="admin.html" style="color:#E100FF;text-decoration:none;">Admin Panel</a>
+        </div>
+
+        <div class="footer" style="margin-top:40px;">Built by Manshi</div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+// Redirect if already logged in
+window.addEventListener("DOMContentLoaded", function() {
+    if (isLoggedIn()) {
+        window.location.href = "index.html";
+    }
+});
+
+function login() {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const errorEl = document.getElementById("loginError");
+
+    if (!username || !password) {
+        errorEl.textContent = "Please enter both username and password";
+        errorEl.style.display = "block";
+        return;
+    }
+
+    const users = getAllUsers();
+    const user = users.find(u => u.username === username && u.password === password);
+
+    if (user) {
+        // Set current user session
+        sessionStorage.setItem("currentUserId", user.id);
+        sessionStorage.setItem("currentUsername", user.username);
+        sessionStorage.setItem("isAdmin", user.isAdmin ? "true" : "false");
+        
+        // Redirect to dashboard
+        window.location.href = "index.html";
+    } else {
+        errorEl.textContent = "Invalid username or password";
+        errorEl.style.display = "block";
+    }
+}
+
+// Allow Enter key to login
+document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("password").addEventListener("keypress", function(e) {
+        if (e.key === "Enter") {
+            login();
+        }
+    });
+});
+</script>
+</body>
+</html>

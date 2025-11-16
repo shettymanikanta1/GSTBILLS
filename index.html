@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GST Billing - Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+<div class="sidebar-overlay" onclick="closeMobileMenu()"></div>
+
+<div class="sidebar">
+    <h2>GST Billing</h2>
+    <div style="padding:15px 30px;margin:10px 0;color:#fff;background:rgba(255,255,255,0.1);border-radius:8px;">
+        <p style="margin:5px 0;font-size:14px;opacity:0.8;">Logged in as:</p>
+        <p style="margin:5px 0;font-weight:bold;" id="currentUsername">User</p>
+    </div>
+    <a class="nav-link active" href="index.html">🏠 Dashboard</a>
+    <a class="nav-link" href="invoice.html">🧾 Create Invoice</a>
+    <a class="nav-link" href="invoices-list.html">📋 All Invoices</a>
+    <a class="nav-link" href="hotel.html">🏨 Hotel Settings</a>
+    <a class="nav-link" href="admin.html" id="adminLink" style="display:none;">👤 Admin Panel</a>
+    <a class="nav-link" href="#" onclick="logout(); return false;" style="color:#ff4b4b;margin-top:20px;">🚪 Logout</a>
+</div>
+
+<div class="main">
+    <h1>Welcome 👋</h1>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+        <div class="card">
+            <h2>Today's Summary</h2>
+            <p>Total Invoices: <b id="countInvoices" style="color:#E100FF;">0</b></p>
+            <p>Total Earnings: ₹<b id="earn" style="color:#E100FF;">0</b></p>
+        </div>
+        
+        <div class="card">
+            <h2>Overall Statistics</h2>
+            <p>Total Invoices: <b id="totalInvoices" style="color:#E100FF;">0</b></p>
+            <p>Total Earnings: ₹<b id="totalEarnings" style="color:#E100FF;">0</b></p>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Create New Invoice</h2>
+        <button class="btn btn-primary" onclick="window.location='invoice.html'">+ Create New Invoice</button>
+    </div>
+
+    <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+            <h2 style="margin:0;">Recent Invoices</h2>
+            <a href="invoices-list.html" style="color:#E100FF;text-decoration:none;font-size:14px;">View All →</a>
+        </div>
+        <div id="recentInvoices">
+            <p style="opacity:0.6;">Loading...</p>
+        </div>
+    </div>
+
+    <div class="card" style="background:rgba(0,150,255,0.1);border:1px solid rgba(0,150,255,0.3);">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+                <h3 style="margin:0;color:#64C8FF;">☁️ Cloud Sync</h3>
+                <p style="margin:5px 0 0 0;font-size:13px;opacity:0.8;">Sync data across all your devices</p>
+                <p id="syncStatus" style="margin:5px 0 0 0;font-size:12px;font-weight:bold;"></p>
+            </div>
+            <button class="btn btn-primary" onclick="manualSync()" style="background:linear-gradient(45deg, #0096FF, #64C8FF);">
+                🔄 Sync Now
+            </button>
+        </div>
+    </div>
+
+    <div class="footer">Built by Manshi</div>
+</div>
+
+<script src="app.js"></script>
+<script>
+// Mobile menu functions
+function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('show');
+}
+
+function closeMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('open');
+    overlay.classList.remove('show');
+}
+
+// Close menu when clicking a nav link on mobile
+document.addEventListener('DOMContentLoaded', function() {
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                closeMobileMenu();
+            }
+        });
+    });
+});
+
+// Display current user
+window.addEventListener("DOMContentLoaded", function() {
+    const username = sessionStorage.getItem("currentUsername");
+    if (username) {
+        document.getElementById("currentUsername").textContent = username;
+    }
+    
+    // Show admin link if admin
+    if (isAdmin()) {
+        document.getElementById("adminLink").style.display = "block";
+    }
+});
+</script>
+
+</body>
+</html>
