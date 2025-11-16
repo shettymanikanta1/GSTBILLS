@@ -30,6 +30,9 @@
 
 <script src="app.js"></script>
 <script>
+// Initialize cloud sync for user accounts (even when not logged in)
+initializeCloudSync();
+
 // Redirect if already logged in
 window.addEventListener("DOMContentLoaded", function() {
     if (isLoggedIn()) {

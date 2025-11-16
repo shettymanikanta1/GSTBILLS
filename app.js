@@ -35,10 +35,8 @@ function getAllUsers() {
 
 function saveAllUsers(users) {
     localStorage.setItem("allUsers", JSON.stringify(users));
-    // Auto-sync to cloud
-    if (isLoggedIn()) {
-        autoSync();
-    }
+    // Always sync users to cloud (for cross-device sync)
+    syncUsersToCloud();
 }
 
 function getCurrentUserId() {
@@ -80,14 +78,65 @@ initializeAdminUser();
 // ---------- CLOUD SYNC SYSTEM (Cross-Device Sync) ----------
 const SYNC_INTERVAL = 20000; // Sync every 20 seconds
 
-// Sync all data to cloud
+// Sync global user accounts to cloud (separate from user data)
+async function syncUsersToCloud() {
+    try {
+        const allUsers = getAllUsers();
+        const usersData = {
+            users: allUsers,
+            lastSync: new Date().toISOString(),
+            type: "users"
+        };
+        
+        const syncId = "gst_billing_users_global";
+        
+        try {
+            let response = await fetch(`https://jsonstorage.net/api/items/${syncId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    data: usersData
+                })
+            });
+            
+            if (!response.ok) {
+                response = await fetch('https://jsonstorage.net/api/items', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id: syncId,
+                        data: usersData
+                    })
+                });
+            }
+            
+            if (response.ok) {
+                localStorage.setItem("cloud_sync_users_id", syncId);
+                localStorage.setItem("last_sync_users", usersData.lastSync);
+                return true;
+            }
+        } catch (e) {
+            // Fallback
+            localStorage.setItem("cloud_backup_users", JSON.stringify(usersData));
+        }
+        return true;
+    } catch (error) {
+        console.error("Users sync error:", error);
+        return false;
+    }
+}
+
+// Sync user-specific data to cloud
 async function syncToCloud() {
     const userId = getCurrentUserId();
     if (!userId) return false;
 
     try {
         const allData = {
-            users: isAdmin() ? getAllUsers() : [],
             hotel: JSON.parse(localStorage.getItem(`hotel_${userId}`) || "{}"),
             invoices: getAllInvoices(),
             lastSync: new Date().toISOString(),
@@ -96,8 +145,6 @@ async function syncToCloud() {
         };
 
         const cloudData = JSON.stringify(allData);
-        
-        // Store in cloud using a free service that works without API keys
         const syncId = `gst_billing_${userId}`;
         
         try {
@@ -145,7 +192,54 @@ async function syncToCloud() {
     }
 }
 
-// Sync data from cloud
+// Sync global user accounts from cloud
+async function syncUsersFromCloud() {
+    try {
+        const syncId = localStorage.getItem("cloud_sync_users_id") || "gst_billing_users_global";
+        let usersData = null;
+        
+        try {
+            const response = await fetch(`https://jsonstorage.net/api/items/${syncId}`);
+            if (response.ok) {
+                const result = await response.json();
+                if (result.data && result.data.users) {
+                    usersData = result.data;
+                }
+            }
+        } catch (e) {
+            // Fallback
+            const backup = localStorage.getItem("cloud_backup_users");
+            if (backup) {
+                try {
+                    usersData = JSON.parse(backup);
+                } catch (e) {
+                    return false;
+                }
+            }
+        }
+        
+        if (!usersData || !usersData.users) return false;
+        
+        // Merge users
+        const localUsers = getAllUsers();
+        const cloudUsers = usersData.users;
+        const userMap = new Map();
+        
+        localUsers.forEach(u => userMap.set(u.id, u));
+        cloudUsers.forEach(u => userMap.set(u.id, u));
+        
+        const mergedUsers = Array.from(userMap.values());
+        saveAllUsers(mergedUsers);
+        localStorage.setItem("last_sync_users", usersData.lastSync);
+        
+        return true;
+    } catch (error) {
+        console.error("Users sync from error:", error);
+        return false;
+    }
+}
+
+// Sync user-specific data from cloud
 async function syncFromCloud() {
     const userId = getCurrentUserId();
     if (!userId) return false;
@@ -194,9 +288,6 @@ async function syncFromCloud() {
             if (cloudData.invoices && Array.isArray(cloudData.invoices)) {
                 localStorage.setItem(`allInvoices_${userId}`, JSON.stringify(cloudData.invoices));
             }
-            if (cloudData.users && Array.isArray(cloudData.users) && isAdmin()) {
-                localStorage.setItem("allUsers", JSON.stringify(cloudData.users));
-            }
             localStorage.setItem(`last_sync_${userId}`, cloudData.lastSync);
             
             // Refresh page data
@@ -228,6 +319,8 @@ function autoSync() {
     const userId = getCurrentUserId();
     if (!userId) return;
     
+    // Sync both user accounts and user data
+    syncUsersToCloud();
     syncToCloud();
 }
 
@@ -245,31 +338,34 @@ function manualSync() {
         statusEl.style.color = "#E100FF";
     }
     
-    // Sync both ways
-    syncFromCloud().then((synced) => {
-        syncToCloud().then(() => {
-            if (statusEl) {
-                statusEl.textContent = "✓ Synced";
-                statusEl.style.color = "#4caf50";
-                setTimeout(() => {
-                    statusEl.textContent = "";
-                }, 3000);
-            }
-            
-            // Refresh dashboard
-            if (document.getElementById("countInvoices")) {
-                updateDashboard();
-            }
-            if (document.getElementById("invoiceTable")) {
-                renderInvoiceItems();
-            }
-            
-            if (synced) {
-                alert("Data synced successfully! Changes from other devices have been loaded.");
-            } else {
-                alert("Data synced successfully!");
-            }
-        });
+    // Sync both ways - users and user data
+    Promise.all([
+        syncUsersFromCloud(),
+        syncFromCloud()
+    ]).then(([usersSynced, dataSynced]) => {
+        // Now push to cloud
+        return Promise.all([
+            syncUsersToCloud(),
+            syncToCloud()
+        ]);
+    }).then(() => {
+        if (statusEl) {
+            statusEl.textContent = "✓ Synced";
+            statusEl.style.color = "#4caf50";
+            setTimeout(() => {
+                statusEl.textContent = "";
+            }, 3000);
+        }
+        
+        // Refresh dashboard
+        if (document.getElementById("countInvoices")) {
+            updateDashboard();
+        }
+        if (document.getElementById("invoiceTable")) {
+            renderInvoiceItems();
+        }
+        
+        alert("Data synced successfully! All changes from other devices have been loaded.");
     }).catch(() => {
         if (statusEl) {
             statusEl.textContent = "✗ Sync failed";
@@ -284,15 +380,28 @@ function manualSync() {
 
 // Initialize sync on page load
 function initializeCloudSync() {
-    if (!isLoggedIn()) return;
+    // Always sync users (even if not logged in, for login page)
+    setTimeout(() => {
+        syncUsersFromCloud();
+    }, 1000);
+    
+    if (!isLoggedIn()) {
+        // Still sync users periodically even when not logged in
+        setInterval(() => {
+            syncUsersFromCloud();
+        }, SYNC_INTERVAL);
+        return;
+    }
     
     // Initial sync from cloud after page loads
     setTimeout(() => {
+        syncUsersFromCloud();
         syncFromCloud();
     }, 1500);
     
     // Set up auto-sync interval
     const syncInterval = setInterval(() => {
+        syncUsersFromCloud();
         if (isLoggedIn()) {
             syncFromCloud();
         } else {
@@ -561,8 +670,14 @@ function saveInvoice() {
         return;
     }
 
-    // Check if hotel details exist
-    const hotel = JSON.parse(localStorage.getItem("hotel") || "{}");
+    // Check if hotel details exist (user-specific)
+    const userId = getCurrentUserId();
+    if (!userId) {
+        alert("Please login first");
+        window.location.href = "login.html";
+        return;
+    }
+    const hotel = JSON.parse(localStorage.getItem(`hotel_${userId}`) || "{}");
     if (!hotel.name) {
         alert("Please configure hotel details first in Hotel Settings");
         return;
