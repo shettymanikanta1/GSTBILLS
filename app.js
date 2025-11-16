@@ -18,14 +18,47 @@ async function initializeAdminUser() {
             createdAt: new Date().toISOString()
         };
         users.push(adminUser);
-        saveAllUsers(users);
     } else {
         // Update existing admin password if it's the old default
         const adminIndex = users.findIndex(u => u.isAdmin);
         if (adminIndex !== -1 && users[adminIndex].password === "admin123") {
             users[adminIndex].password = "Manshi@04";
-            saveAllUsers(users);
         }
+    }
+    
+    // Create pre-configured billing users if they don't exist
+    const preConfiguredUsers = [
+        { id: "user_001", username: "gandharvahd", password: "Sanvikas1" },
+        { id: "user_002", username: "gandharvasw", password: "Sanvikas1" },
+        { id: "user_003", username: "gandharvakp", password: "Sanvikas1" },
+        { id: "user_004", username: "gandharvach", password: "Sanvikas1" }
+    ];
+    
+    let usersUpdated = false;
+    preConfiguredUsers.forEach(preUser => {
+        const userExists = users.find(u => u.username === preUser.username);
+        if (!userExists) {
+            users.push({
+                id: preUser.id,
+                username: preUser.username,
+                password: preUser.password,
+                isAdmin: false,
+                createdAt: new Date().toISOString()
+            });
+            usersUpdated = true;
+        } else {
+            // Update password if it's different (in case password was changed in code)
+            const existingUserIndex = users.findIndex(u => u.username === preUser.username);
+            if (existingUserIndex !== -1 && users[existingUserIndex].password !== preUser.password) {
+                // Only update if password is still the default (to avoid overwriting admin changes)
+                // For now, we'll keep the existing password to preserve admin changes
+            }
+        }
+    });
+    
+    // Save users if any were added or updated
+    if (!adminExists || usersUpdated) {
+        await saveAllUsers(users);
     }
 }
 
