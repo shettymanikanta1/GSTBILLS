@@ -50,8 +50,8 @@
 
 <script src="app.js"></script>
 <script>
-function loadAllInvoices() {
-    const invoices = getAllInvoices();
+async function loadAllInvoices() {
+    const invoices = await getAllInvoices();
     const searchTerm = document.getElementById("searchInput")?.value?.toLowerCase() || "";
     
     // Filter invoices if search term exists

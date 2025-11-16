@@ -82,8 +82,8 @@
 
 <script src="app.js"></script>
 <script>
-function loadUsersList() {
-    const users = getAllUsers().filter(u => !u.isAdmin);
+async function loadUsersList() {
+    const users = (await getAllUsers()).filter(u => !u.isAdmin);
     const container = document.getElementById("usersList");
 
     if (users.length === 0) {
@@ -116,7 +116,7 @@ function loadUsersList() {
     `).join("");
 }
 
-function createUser() {
+async function createUser() {
     const username = document.getElementById("newUsername").value.trim();
     const password = document.getElementById("newPassword").value.trim();
     const hotelName = document.getElementById("newHotelName").value.trim();
@@ -129,7 +129,7 @@ function createUser() {
         return;
     }
 
-    const users = getAllUsers();
+    const users = await getAllUsers();
     
     // Check if username already exists
     if (users.find(u => u.username === username)) {
@@ -150,7 +150,7 @@ function createUser() {
     };
 
     users.push(newUser);
-    saveAllUsers(users);
+    await saveAllUsers(users);
 
     messageEl.textContent = `User "${username}" created successfully!`;
     messageEl.style.color = "#4caf50";
@@ -222,8 +222,8 @@ function toggleListPasswordVisibility(userId, password) {
     }
 }
 
-function editUser(userId) {
-    const users = getAllUsers();
+async function editUser(userId) {
+    const users = await getAllUsers();
     const user = users.find(u => u.id === userId);
     
     if (!user) {
@@ -260,7 +260,7 @@ function closeEditModal() {
     document.getElementById("editHotelName").value = "";
 }
 
-function saveUserEdit() {
+async function saveUserEdit() {
     if (!editingUserId) {
         alert("No user selected for editing");
         return;
@@ -278,7 +278,7 @@ function saveUserEdit() {
         return;
     }
 
-    const users = getAllUsers();
+    const users = await getAllUsers();
     const userIndex = users.findIndex(u => u.id === editingUserId);
     
     if (userIndex === -1) {
@@ -303,7 +303,7 @@ function saveUserEdit() {
     users[userIndex].hotelName = hotelName;
     users[userIndex].updatedAt = new Date().toISOString();
 
-    saveAllUsers(users);
+    await saveAllUsers(users);
 
     messageEl.textContent = `User "${username}" updated successfully!`;
     messageEl.style.color = "#4caf50";
@@ -317,19 +317,19 @@ function saveUserEdit() {
     }, 1500);
 }
 
-function deleteUser(userId) {
+async function deleteUser(userId) {
     if (!confirm("Are you sure you want to delete this user? All their data will be lost!")) {
         return;
     }
 
-    const users = getAllUsers();
+    const users = await getAllUsers();
     const filteredUsers = users.filter(u => u.id !== userId);
-    saveAllUsers(filteredUsers);
+    await saveAllUsers(filteredUsers);
 
     // Delete user's data
     deleteUserData(userId);
 
-    loadUsersList();
+    await loadUsersList();
     alert("User deleted successfully!");
 }
 
